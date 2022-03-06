@@ -1,3 +1,5 @@
+options(scipen = 999)
+
 # Libraries ----
 library(sidrar)
 library(tidyverse)
@@ -38,34 +40,52 @@ library(tidyverse)
         
 # Remover dados referentes a "percentual do total geral" da bases ----
         
-data_salario = data_salario[!str_detect(data_salario$Variável, "percentual do total geral"), ]
-data_receita = data_receita[!str_detect(data_receita$Variável, "percentual do total geral"), ]
-data_custos_1 = data_custos_1[!str_detect(data_custos_1$Variável, "percentual do total geral"), ]
-data_custos_2 = data_custos_2[!str_detect(data_custos_2$Variável, "percentual do total geral"), ]
+        data_salario = data_salario[!str_detect(data_salario$Variável, "percentual do total geral"), ]
+        data_receita = data_receita[!str_detect(data_receita$Variável, "percentual do total geral"), ]
+        data_custos_1 = data_custos_1[!str_detect(data_custos_1$Variável, "percentual do total geral"), ]
+        data_custos_2 = data_custos_2[!str_detect(data_custos_2$Variável, "percentual do total geral"), ]
 
-
-####################### EM CONSTRUÇÃO - DEFLACIONANDO SÉRIES #######################################
-
-a = apply(data_salario[, c(4,5,11)], 1, function(x){
         
-        if (x[1] == "Mil Reais") {
-                
-                as.numeric(x[2]) * INDICADOR_IPCA_BASE / indicadores_ipca[indicadores_ipca$ano == x[3], "indice_ipca_medio"] 
-                
-        } else {
-                
-                as.numeric(x[2])
-                
-        }        
+# Adição de variáveis de valor com ajuste monetário para ano de 2019 ----
         
-})
+        # Criando lista de dataframes alvo
+        ls_data = list(data_salario = data_salario, 
+                       data_receita = data_receita,
+                       data_custos_1 = data_custos_1,
+                       data_custos_2 = data_custos_2)
+        
+        # Processo de ajuste
+        for (i in 1:length(ls_data)){
+                
+                data_ajuste = ls_data[[i]]
+                
+                # Selecionar trecho da base necessária
+                data_ajuste = data_ajuste[data_ajuste$`Unidade de Medida` == "Mil Reais", ]
+                
+                # Processo de normalização dos valores monetários
+                valores_ajustados = apply(data_ajuste[, c("Valor", "Ano")], 1, function(x){
+                        
+                        round(as.numeric(x[1]) * INDICADOR_IPCA_BASE / indicadores_ipca[indicadores_ipca$ano == x[2], "indice_ipca_medio"], 0) 
+                        
+                })
+                valores_ajustados[sapply(valores_ajustados, is.null)] <- NA
+                valores_ajustados = unlist(valores_ajustados) %>% as.vector()
+                
+                # Unir dados ajustados com base original
+                data_ajuste$Valor = valores_ajustados
+                data_ajuste$Variável = paste0(data_ajuste$Variável, " (em valores de 2019)")
+                ls_data[[i]] = rbind(ls_data[[i]], data_ajuste)
+                rm(valores_ajustados, data_ajuste)
+                
+        }
+        
+        # Endereçar dataframes ajustados
+        for (i in 1:length(ls_data)){
+                
+                assign(names(ls_data[i]), ls_data[[i]])        
+                
+        }
 
-a[sapply(a, is.null)] <- NA
-a = unlist(a) %>% as.data.frame()
-
-
-
-####################### EM CONSTRUÇÃO - DEFLACIONANDO SÉRIES #######################################
         
         
         
