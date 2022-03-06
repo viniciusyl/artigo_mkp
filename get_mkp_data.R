@@ -55,17 +55,17 @@ library(tidyverse)
                        data_custos_2 = data_custos_2)
         
         # Processo de ajuste
-        for (i in 1:length(ls_data)){
+        ls_data = lapply(ls_data, function(x){
                 
-                data_ajuste = ls_data[[i]]
+                data_ajuste = x
                 
                 # Selecionar trecho da base necessária
                 data_ajuste = data_ajuste[data_ajuste$`Unidade de Medida` == "Mil Reais", ]
                 
                 # Processo de normalização dos valores monetários
-                valores_ajustados = apply(data_ajuste[, c("Valor", "Ano")], 1, function(x){
+                valores_ajustados = apply(data_ajuste[, c("Valor", "Ano")], 1, function(y){
                         
-                        round(as.numeric(x[1]) * INDICADOR_IPCA_BASE / indicadores_ipca[indicadores_ipca$ano == x[2], "indice_ipca_medio"], 0) 
+                        round(as.numeric(y[1]) * INDICADOR_IPCA_BASE / indicadores_ipca[indicadores_ipca$ano == y[2], "indice_ipca_medio"], 0)
                         
                 })
                 valores_ajustados[sapply(valores_ajustados, is.null)] <- NA
@@ -74,10 +74,9 @@ library(tidyverse)
                 # Unir dados ajustados com base original
                 data_ajuste$Valor = valores_ajustados
                 data_ajuste$Variável = paste0(data_ajuste$Variável, " (em valores de 2019)")
-                ls_data[[i]] = rbind(ls_data[[i]], data_ajuste)
-                rm(valores_ajustados, data_ajuste)
+                x = rbind(x, data_ajuste)
                 
-        }
+        })
         
         # Endereçar dataframes ajustados
         for (i in 1:length(ls_data)){
