@@ -19,6 +19,8 @@ library(tidyverse)
         bkp_data_custos_2 = get_sidra(api = "/t/1847/n1/all/v/all/p/2013,2014,2015,2016,2017,2018,2019/C12762/all")
         data_custos_1 = bkp_data_custos_1
         data_custos_2 = bkp_data_custos_2
+        data_custos = rbind(data_custos_1, data_custos_2)
+        rm(data_custos_1, data_custos_2)
 
 # Get data IPCA ----
         
@@ -42,17 +44,36 @@ library(tidyverse)
         
         data_salario = data_salario[!str_detect(data_salario$Variável, "percentual do total geral"), ]
         data_receita = data_receita[!str_detect(data_receita$Variável, "percentual do total geral"), ]
-        data_custos_1 = data_custos_1[!str_detect(data_custos_1$Variável, "percentual do total geral"), ]
-        data_custos_2 = data_custos_2[!str_detect(data_custos_2$Variável, "percentual do total geral"), ]
+        data_custos = data_custos[!str_detect(data_custos$Variável, "percentual do total geral"), ]
+        
+# Criar variável de custos diretos de produção na base de custos ----
 
+        # Selecionar variáveis de custo direto
+        variaveis_custo_direto = c("Consumo de matérias-primas, materiais auxiliares e componentes", "Custo das mercadorias adquiridas para revenda", "Compras de energia elétrica e consumo de combustíveis", "Consumo de peças, acessórios e pequenas ferramentas", "Serviços industriais prestados por terceiros e de manutenção", "Consumo de matérias-primas, materiais auxiliares e componentes (em valores de 2019)", "Custo das mercadorias adquiridas para revenda (em valores de 2019)", "Compras de energia elétrica e consumo de combustíveis (em valores de 2019)", "Consumo de peças, acessórios e pequenas ferramentas (em valores de 2019)", "Serviços industriais prestados por terceiros e de manutenção (em valores de 2019)")
+        
+        # Criar variável de total de custos diretos de produção
+        data_custo_d= data_custos[data_custos$Variável %in% variaveis_custo_direto, ] %>%
+                group_by(Ano, `Classificação Nacional de Atividades Econômicas (CNAE 2.0)`) %>%
+                mutate(soma = sum(Valor, na.rm = T))
+        
+        data_custo_d = data_custo_d[str_detect(data_custo_d$Variável, "Consumo de matérias-primas, materiais auxiliares e componentes"), ]
+        
+        data_custo_d$Valor = data_custo_d$soma
+        data_custo_d$soma = NULL
+        data_custo_d$`Variável (Código)` = "AAA"
+        data_custo_d$Variável = str_replace(data_custo_d$Variável, "Consumo de matérias-primas, materiais auxiliares e componentes", "Custo direto de produção - Total")
+        data_custo_d[data_custo_d$Valor == 0, "Valor"] = NA
+        
+        # Unir variável total à base de custos
+        data_custos = rbind(data_custos, data_custo_d)
+        rm(data_custo_d)
         
 # Adição de variáveis de valor com ajuste monetário para ano de 2019 ----
         
         # Criando lista de dataframes alvo
         ls_data = list(data_salario = data_salario, 
                        data_receita = data_receita,
-                       data_custos_1 = data_custos_1,
-                       data_custos_2 = data_custos_2)
+                       data_custos = data_custos)
         
         # Processo de ajuste
         ls_data = lapply(ls_data, function(x){
@@ -85,14 +106,26 @@ library(tidyverse)
                 
         }
 
+# Selecionar variáveis de interesse das bases de receita, custo e salários ----
+        
+        # Seleção base receita
+        variaveis_receita = c("Número de empresas", "Receita líquida de vendas", "Receita líquida de vendas (em valores de 2019)")
+        data_receita_ext = data_receita[data_receita$Variável %in% variaveis_receita, ]
+        
+        # Seleção base salário
+        variaveis_salario = c("Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção", "Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção (em valores de 2019)")
+        data_salario_ext = data_salario[data_salario$Variável %in% variaveis_salario, ]
+
+        # Seleção base custos
+        variaveis_custo = c("Consumo de matérias-primas, materiais auxiliares e componentes", "Custo das mercadorias adquiridas para revenda", "Compras de energia elétrica e consumo de combustíveis", "Consumo de peças, acessórios e pequenas ferramentas", "Serviços industriais prestados por terceiros e de manutenção", "Consumo de matérias-primas, materiais auxiliares e componentes (em valores de 2019)", "Custo das mercadorias adquiridas para revenda (em valores de 2019)", "Compras de energia elétrica e consumo de combustíveis (em valores de 2019)", "Consumo de peças, acessórios e pequenas ferramentas (em valores de 2019)", "Serviços industriais prestados por terceiros e de manutenção (em valores de 2019)", "Custo direto de produção - Total", "Custo direto de produção - Total (em valores de 2019)")
+        data_custo_ext = data_custos[data_custos$Variável %in% variaveis_custo, ]
+
+# Exportar arquivos
+        
+        write.csv2(data_receita_ext, "data_receita_ext.csv", row.names = F)
+        write.csv2(data_salario_ext, "data_salario_ext.csv", row.names = F)
+        write.csv2(data_custo_ext, "data_custo_ext.csv", row.names = F)
         
         
-        
-        
-        
-        
-        
-        
-        
-                
+
         
