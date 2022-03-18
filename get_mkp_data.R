@@ -48,10 +48,10 @@ library(tidyverse)
         
 # Criar variável de custos diretos de produção na base de custos ----
 
-        # Selecionar variáveis de custo direto
+        ## Selecionar variáveis de custo direto
         variaveis_custo_direto = c("Consumo de matérias-primas, materiais auxiliares e componentes", "Custo das mercadorias adquiridas para revenda", "Compras de energia elétrica e consumo de combustíveis", "Consumo de peças, acessórios e pequenas ferramentas", "Serviços industriais prestados por terceiros e de manutenção", "Consumo de matérias-primas, materiais auxiliares e componentes (em valores de 2019)", "Custo das mercadorias adquiridas para revenda (em valores de 2019)", "Compras de energia elétrica e consumo de combustíveis (em valores de 2019)", "Consumo de peças, acessórios e pequenas ferramentas (em valores de 2019)", "Serviços industriais prestados por terceiros e de manutenção (em valores de 2019)")
         
-        # Criar variável de total de custos diretos de produção
+        ## Criar variável de total de custos diretos de produção
         data_custo_d= data_custos[data_custos$Variável %in% variaveis_custo_direto, ] %>%
                 group_by(Ano, `Classificação Nacional de Atividades Econômicas (CNAE 2.0)`) %>%
                 mutate(soma = sum(Valor, na.rm = T))
@@ -64,26 +64,26 @@ library(tidyverse)
         data_custo_d$Variável = str_replace(data_custo_d$Variável, "Consumo de matérias-primas, materiais auxiliares e componentes", "Custo direto de produção - Total")
         data_custo_d[data_custo_d$Valor == 0, "Valor"] = NA
         
-        # Unir variável total à base de custos
+        ## Unir variável total à base de custos
         data_custos = rbind(data_custos, data_custo_d)
         rm(data_custo_d)
         
 # Adição de variáveis de valor com ajuste monetário para ano de 2019 ----
         
-        # Criando lista de dataframes alvo
+        ## Criando lista de dataframes alvo
         ls_data = list(data_salario = data_salario, 
                        data_receita = data_receita,
                        data_custos = data_custos)
         
-        # Processo de ajuste
+        ## Processo de ajuste
         ls_data = lapply(ls_data, function(x){
                 
                 data_ajuste = x
                 
-                # Selecionar trecho da base necessária
+                ## Selecionar trecho da base necessária
                 data_ajuste = data_ajuste[data_ajuste$`Unidade de Medida` == "Mil Reais", ]
                 
-                # Processo de normalização dos valores monetários
+                ## Processo de normalização dos valores monetários
                 valores_ajustados = apply(data_ajuste[, c("Valor", "Ano")], 1, function(y){
                         
                         round(as.numeric(y[1]) * INDICADOR_IPCA_BASE / indicadores_ipca[indicadores_ipca$ano == y[2], "indice_ipca_medio"], 0)
@@ -92,14 +92,14 @@ library(tidyverse)
                 valores_ajustados[sapply(valores_ajustados, is.null)] <- NA
                 valores_ajustados = unlist(valores_ajustados) %>% as.vector()
                 
-                # Unir dados ajustados com base original
+                ## Unir dados ajustados com base original
                 data_ajuste$Valor = valores_ajustados
                 data_ajuste$Variável = paste0(data_ajuste$Variável, " (em valores de 2019)")
                 x = rbind(x, data_ajuste)
                 
         })
         
-        # Endereçar dataframes ajustados
+        ## Endereçar dataframes ajustados
         for (i in 1:length(ls_data)){
                 
                 assign(names(ls_data[i]), ls_data[[i]])        
@@ -108,15 +108,15 @@ library(tidyverse)
 
 # Selecionar variáveis de interesse das bases de receita, custo e salários ----
         
-        # Seleção base receita
+        ## Seleção base receita
         variaveis_receita = c("Número de empresas", "Receita líquida de vendas", "Receita líquida de vendas (em valores de 2019)")
         data_receita_ext = data_receita[data_receita$Variável %in% variaveis_receita, ]
         
-        # Seleção base salário
+        ## Seleção base salário
         variaveis_salario = c("Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção", "Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção (em valores de 2019)")
         data_salario_ext = data_salario[data_salario$Variável %in% variaveis_salario, ]
 
-        # Seleção base custos
+        ## Seleção base custos
         variaveis_custo = c("Consumo de matérias-primas, materiais auxiliares e componentes", "Custo das mercadorias adquiridas para revenda", "Compras de energia elétrica e consumo de combustíveis", "Consumo de peças, acessórios e pequenas ferramentas", "Serviços industriais prestados por terceiros e de manutenção", "Consumo de matérias-primas, materiais auxiliares e componentes (em valores de 2019)", "Custo das mercadorias adquiridas para revenda (em valores de 2019)", "Compras de energia elétrica e consumo de combustíveis (em valores de 2019)", "Consumo de peças, acessórios e pequenas ferramentas (em valores de 2019)", "Serviços industriais prestados por terceiros e de manutenção (em valores de 2019)", "Custo direto de produção - Total", "Custo direto de produção - Total (em valores de 2019)")
         data_custo_ext = data_custos[data_custos$Variável %in% variaveis_custo, ]
 
