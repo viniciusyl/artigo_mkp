@@ -121,7 +121,7 @@ library(tidyverse)
         data_custo_ext = data_custos[data_custos$Variável %in% variaveis_custo, ]
 
 # Exportar arquivos
-         
+        
         write.csv2(data_receita_ext, "data_receita_ext.csv", row.names = F, fileEncoding = "UTF-8")
         write.csv2(data_salario_ext, "data_salario_ext.csv", row.names = F, fileEncoding = "UTF-8")
         write.csv2(data_custo_ext, "data_custo_ext.csv", row.names = F, fileEncoding = "UTF-8")
