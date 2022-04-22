@@ -3,6 +3,7 @@ options(scipen = 999)
 # Libraries ----
 library(sidrar)
 library(tidyverse)
+library(readr)
 
 # Get data para o setores da indústria de transformação ----
 
@@ -122,9 +123,9 @@ library(tidyverse)
 
 # Exportar arquivos
         
-        write.csv2(data_receita_ext, "data_receita_ext.csv", row.names = F, fileEncoding = "UTF-8")
-        write.csv2(data_salario_ext, "data_salario_ext.csv", row.names = F, fileEncoding = "UTF-8")
-        write.csv2(data_custo_ext, "data_custo_ext.csv", row.names = F, fileEncoding = "UTF-8")
+        write_excel_csv2(data_receita_ext, "data_receita_ext.csv")
+        write_excel_csv2(data_salario_ext, "data_salario_ext.csv")
+        write_excel_csv2(data_custo_ext, "data_custo_ext.csv")
         
         
 
