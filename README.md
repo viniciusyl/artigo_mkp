@@ -13,3 +13,5 @@ Repositório com arquivos relacionados ao projeto Artigo Mark-up
   4. data_salario_ext.csv --> arquivo .csv com dados dos dos salários ligadas à produção por setores;
   
   5. adj_mkp_data.r --> script R que busca informações geradas pelo get_mkp_data.r e calcula os valores para o mark-up por setores da CNAE 2.0. Contém o script que desenvolve as bases a serem consumidas pelo App. 
+  
+  6. data_mkp.csv --> arquivo .csv com dados de receitas, custos, salários e mark-up calculados por setor. Arquivo com dados principais do App.
