@@ -30,9 +30,19 @@ data_salario = readr::read_csv2("https://raw.githubusercontent.com/viniciusyl/ar
         
         # Calcular mark-up
         data_mkp$mkp = data_mkp$`Receita líquida de vendas` / (data_mkp$`Custo direto de produção - Total` + data_mkp$`Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção`)
-
+        data_mkp = as.data.frame(data_mkp)
+        
 # Identificar agrupamento de setores ----
-data_mkp[str_detect(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)`, "[0-9]+[0-9][[:space:]]"), ]
 
+        # Identificar grupo de setores e subsetores
+        setores = unique(data_mkp[str_detect(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)`, "[0-9]+[0-9][[:space:]]"), "Classificação Nacional de Atividades Econômicas (CNAE 2.0)"])  
+        sub_setores = unique(data_mkp[str_detect(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)`, "[0-9]+[0-9]+[.]+[0-9]"), "Classificação Nacional de Atividades Econômicas (CNAE 2.0)"])
+
+        # Criar coluna ds_entidade e associar valor
+        data_mkp$ds_entidade = NA
+        data_mkp$ds_entidade = ifelse(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)` == "Total", "Total Indústria", data_mkp$ds_entidade)
+        data_mkp$ds_entidade = ifelse(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)` %in% setores, "Setor", data_mkp$ds_entidade)
+        data_mkp$ds_entidade = ifelse(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)` %in% sub_setores, "Sub_Setor", data_mkp$ds_entidade)
+        data_mkp[is.na(data_mkp$ds_entidade), "ds_entidade"] = "Indústria"
 
 
