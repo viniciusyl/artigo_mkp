@@ -44,5 +44,22 @@ data_salario = readr::read_csv2("https://raw.githubusercontent.com/viniciusyl/ar
         data_mkp$ds_entidade = ifelse(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)` %in% setores, "Setor", data_mkp$ds_entidade)
         data_mkp$ds_entidade = ifelse(data_mkp$`Classificação Nacional de Atividades Econômicas (CNAE 2.0)` %in% sub_setores, "Sub_Setor", data_mkp$ds_entidade)
         data_mkp[is.na(data_mkp$ds_entidade), "ds_entidade"] = "Indústria"
+        
+# Preparar e exportar arquivo final do mark-up
+        
+        # Adicionar variáveis monetárias deflacionadas
+        data_mkp = left_join(data_mkp, data_receita[data_receita$Variável == "Receita líquida de vendas (em valores de 2019)", c("Valor", "link")], by = "link")
+        names(data_mkp)[9] = "Receita líquida de vendas (em valores de 2019)"
+        data_mkp = left_join(data_mkp, data_custo[data_custo$Variável == "Custo direto de produção - Total (em valores de 2019)", c("Valor", "link")], by = "link")
+        names(data_mkp)[10] = "Custo direto de produção - Total (em valores de 2019)"
+        data_mkp = left_join(data_mkp, data_salario[data_salario$Variável == "Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção (em valores de 2019)", c("Valor", "link")], by = "link")
+        names(data_mkp)[11] = "Salários, retiradas e outras remunerações de pessoal assalariado ligado à produção (em valores de 2019)"
+        
+        # Selecionar e ordenar colunas de interesse
+        data_mkp = data_mkp[c(8, 2, 1, 4:6, 9:11, 7)]
+        
+        # Exportar csv
+        write_excel_csv2(data_mkp, "data_mkp.csv")
+        
 
 
